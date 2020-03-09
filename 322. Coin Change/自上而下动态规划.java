@@ -7,37 +7,38 @@
 // @lc code=start
 public class Solution {
   public int coinChange(int[] coins, int amount) {
-    // 调用初始条件
-    return coinChange(0, coins, amount);
+    // 初始条件检查
+    if (amount < 1) return 0;
+    // 动态规划入口
+    return coinChange(coins, amount, new int[amount]);
   }
 
-  // 回溯法三要素：退出条件，回溯过程，递归参数
-  // 参数为当前用的硬币索引，硬币数组，当前已经产生的数值
-  private int coinChange(int idxCoin, int[] coins, int amount) {
-    // 回溯退出
-    if (amount == 0)   return 0;
-    // 回溯执行的条件，仍然有硬币可用或仍有余额
-    if (idxCoin < coins.length && amount > 0) {
-      // 当前值用几个当前硬币表示（向下取整）
-      int maxVal = amount / coins[idxCoin];
-      int minCost = Integer.MAX_VALUE;
-      // 回溯核心内容，每取一个当前硬币，探索其他情况，x为当前用了几个该面值硬币
-      for (int x = 0; x <= maxVal; x++) {
-        // 仍有余额，即为 amount - coins[idxCoin] >= 0
-        if (amount >= x * coins[idxCoin]) {
-          // 用下一个硬币试试
-          int res = coinChange(idxCoin + 1, coins, amount - x * coins[idxCoin]);
-          // 回溯成功，下一种情况也有解
-          if (res != -1)
-            // 与目前的最优解比比看
-            minCost = Math.min(minCost, res + x);
-        }
-      }
-      // 最小代价没有更新，说明所有方案无效
-      return (minCost == Integer.MAX_VALUE)? -1: minCost;
+  /** 
+  * 自上而下的动态规划方法
+  * coins:硬币面额
+  * rem:余额
+  * count:存储中间计算结果，空间换时间
+  */
+  private int coinChange(int[] coins, int rem, int[] count) {
+    // 结束条件：此路径不通
+    if (rem < 0) return -1;
+    // 结束条件：余额为0，成功结束
+    if (rem == 0) return 0;
+    // 之前已经计算过这种情况，直接返回结果，避免重复计算
+    if (count[rem - 1] != 0) return count[rem - 1];
+    int min = Integer.MAX_VALUE;
+    // 遍历当前递归子树的每一种情况
+    for (int coin : coins) {
+      // 用一下coin这个面值的硬币会怎样？res是这个方法的最优情况
+      int res = coinChange(coins, rem - coin, count);
+      // res<0 即为 res=-1,此法失败，res>min不是最优情况，舍去
+      if (res >= 0 && res < min)
+        min = 1 + res;
     }
-    // 没有执行上一个返回那就是一次也没有运行，直接失败
-    return -1;
+    // count[rem - 1]存储着给定金额amount的解
+    // 若为Integer.MAX_VALUE则该情况无解
+    count[rem - 1] = (min == Integer.MAX_VALUE) ? -1 : min;
+    return count[rem - 1];
   }
 }
 
